@@ -1,0 +1,75 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: elvis593
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: pedidoser
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: PEDIDOS3
+
+stages:
+  default:
+    params:
+      tableName: "users-table-${sls:stage}"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:Scan
+      Resource: arn:aws:dynamodb:us-east-1:078496829200:table/OrdersTable
+
+functions:
+  createItem:
+    handler: handler.createItem
+    events:
+      - http:
+          path: orders
+          method: post
+
+  getItems:
+    handler: handler.getItems
+    events:
+      - http:
+          path: orders
+          method: get
+
+  getItem:
+    handler: handler.getItem
+    events:
+      - http:
+          path: orders/{id}
+          method: get
+
+  updateItem:
+    handler: handler.updateItem
+    events:
+      - http:
+          path: orders/{id}
+          method: put
+
+  deleteItem:
+    handler: handler.deleteItem
+    events:
+      - http:
+          path: orders/{id}
+          method: delete
+
+resources:
+  Resources:
+    OrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: OrdersTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
